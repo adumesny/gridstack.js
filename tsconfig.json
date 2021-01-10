@@ -18,6 +18,8 @@
     "target": "ES6"
   }, 
   "exclude": [
+    "./src/h5/dd-draggable-h5.ts",
+    "./src/h5/dd-droppable-h5.ts",
     "./src/**/*.spec.ts",
     "./src/index*", // used for webpack h5/jq/static .js
   ],
