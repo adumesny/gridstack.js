@@ -81,12 +81,14 @@ GridStack.prototype._setupAcceptWidget = function(): GridStack {
 
   // if we don't accept external widgets (default) we still need to accept dragging within our
   // list of items (else we get a no-drop icon on windows)
+  /*
   if (!this.opts.acceptWidgets) {
     GridStackDD.get().droppable(this.el, {
       accept: (el: GridItemHTMLElement) => el.gridstackNode && el.gridstackNode.grid === this
     })
     return this;
   }
+  */
 
   let onDrag = (event, el: GridItemHTMLElement) => {
     let node = el.gridstackNode;
@@ -177,9 +179,7 @@ GridStack.prototype._setupAcceptWidget = function(): GridStack {
 
       // jquery-ui bug. Must verify widget is being dropped out
       // check node variable that gets set when widget is out of grid
-      if (!node._isOutOfGrid) {
-        return;
-      }
+      if (!node._isOutOfGrid) return;
 
       GridStackDD.get().off(el, 'drag');
       node.el = null;

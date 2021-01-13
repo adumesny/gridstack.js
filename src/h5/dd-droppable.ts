@@ -11,7 +11,7 @@ import { DDBaseImplement, HTMLElementExtendOpt } from './dd-base-impl';
 import { DDUtils } from './dd-utils';
 
 export interface DDDroppableOpt {
-  accept?: string | ((el: HTMLElement) => boolean);
+  accept?: string | ((el: HTMLElement) => boolean) | undefined;
   drop?: (event: DragEvent, ui) => void;
   over?: (event: DragEvent, ui) => void;
   out?: (event: DragEvent, ui) => void;
@@ -31,13 +31,12 @@ export class DDDroppable extends DDBaseImplement implements HTMLElementExtendOpt
     this.el = el;
     this.option = opts;
     // create var event binding so we can easily remove and still look like TS methods (unlike anonymous functions)
-    this._dragEnter = this._dragEnter.bind(this);
+    this._mouseEnter = this._mouseEnter.bind(this);
     this._dragOver = this._dragOver.bind(this);
-    this._dragLeave = this._dragLeave.bind(this);
+    this._mouseLeave = this._mouseLeave.bind(this);
     this._drop = this._drop.bind(this);
 
-    this.el.classList.add('ui-droppable');
-    this.el.addEventListener('dragenter', this._dragEnter);
+    this.enable();
     this._setupAccept();
   }
 
@@ -50,28 +49,23 @@ export class DDDroppable extends DDBaseImplement implements HTMLElementExtendOpt
   }
 
   public enable(): void {
-    if (!this.disabled) { return; }
     super.enable();
+    this.el.classList.add('ui-droppable');
     this.el.classList.remove('ui-droppable-disabled');
-    this.el.addEventListener('dragenter', this._dragEnter);
+    this.el.addEventListener('mouseenter', this._mouseEnter);
+    this.el.addEventListener('mouseleave', this._mouseLeave);
   }
 
   public disable(): void {
-    if (this.disabled) { return; }
     super.disable();
+    this.el.classList.remove('ui-droppable');
     this.el.classList.add('ui-droppable-disabled');
-    this.el.removeEventListener('dragenter', this._dragEnter);
+    this.el.removeEventListener('mouseenter', this._mouseEnter);
+    this.el.removeEventListener('mouseleave', this._mouseLeave);
   }
 
   public destroy(): void {
-    this.el.classList.remove('ui-droppable');
-    if (this.disabled) {
-      this.el.classList.remove('ui-droppable-disabled');
-      this.el.removeEventListener('dragenter', this._dragEnter);
-      this.el.removeEventListener('dragover', this._dragOver);
-      this.el.removeEventListener('drop', this._drop);
-      this.el.removeEventListener('dragleave', this._dragLeave);
-    }
+    this.disable();
     super.destroy();
   }
 
@@ -82,21 +76,24 @@ export class DDDroppable extends DDBaseImplement implements HTMLElementExtendOpt
   }
 
   /** @internal called when the cursor enters our area - prepare for a possible drop and track leaving */
-  private _dragEnter(event: DragEvent): void {
-    this.el.removeEventListener('dragenter', this._dragEnter);
+  private _mouseEnter(event: MouseEvent): void {
+    if (!DDManager.dragElement /* || DDManager.dropElement === this*/) return;
     this.acceptable = this._canDrop();
     if (this.acceptable) {
       event.preventDefault();
+      DDManager.dropElement = this;
       const ev = DDUtils.initEvent<DragEvent>(event, { target: this.el, type: 'dropover' });
       if (this.option.over) {
         this.option.over(ev, this._ui(DDManager.dragElement))
       }
       this.triggerEvent('dropover', ev);
+      this.el.classList.add('ui-droppable-over');
+      /*
       this.el.addEventListener('dragover', this._dragOver);
       this.el.addEventListener('drop', this._drop);
+      this.el.addEventListener('dragleave', this._mouseLeave);
+      */
     }
-    this.el.classList.add('ui-droppable-over');
-    this.el.addEventListener('dragleave', this._dragLeave);
   }
 
   /** @internal called when an acceptable to drop item is being dragged over - do nothing but eat the event */
@@ -106,8 +103,10 @@ export class DDDroppable extends DDBaseImplement implements HTMLElementExtendOpt
   }
 
   /** @internal called when the item is leaving our area, stop tracking if we had acceptable item */
-  private _dragLeave(event: DragEvent): void {
-    if (this.el.contains(event.relatedTarget as HTMLElement)) { return; }
+  private _mouseLeave(event: DragEvent): void {
+    if (!DDManager.dragElement || DDManager.dropElement !== this) return;
+    /*
+    if (this.el.contains(event.relatedTarget as HTMLElement)) return;
     this._removeLeaveCallbacks();
     if (this.acceptable) {
       event.preventDefault();
@@ -117,11 +116,12 @@ export class DDDroppable extends DDBaseImplement implements HTMLElementExtendOpt
       }
       this.triggerEvent('dropout', ev);
     }
+    */
   }
 
   /** @internal item is being dropped on us - call the client drop event */
   private _drop(event: DragEvent): void {
-    if (!this.acceptable) { return; } // should not have received event...
+    if (!this.acceptable) return; // should not have received event...
     event.preventDefault();
     const ev = DDUtils.initEvent<DragEvent>(event, { target: this.el, type: 'drop' });
     if (this.option.drop) {
@@ -133,28 +133,27 @@ export class DDDroppable extends DDBaseImplement implements HTMLElementExtendOpt
 
   /** @internal called to remove callbacks when leaving or dropping */
   private _removeLeaveCallbacks() {
-    this.el.removeEventListener('dragleave', this._dragLeave);
+    this.el.removeEventListener('dragleave', this._mouseLeave);
     this.el.classList.remove('ui-droppable-over');
     if (this.acceptable) {
       this.el.removeEventListener('dragover', this._dragOver);
       this.el.removeEventListener('drop', this._drop);
     }
-    this.el.addEventListener('dragenter', this._dragEnter);
+    this.el.addEventListener('mouseenter', this._mouseEnter);
   }
 
-  /** @internal */
+  /** @internal true if element matches the string/method accept option */
   private _canDrop(): boolean {
     return DDManager.dragElement && (!this.accept || this.accept(DDManager.dragElement.el));
   }
 
   /** @internal */
   private _setupAccept(): DDDroppable {
-    if (this.option.accept && typeof this.option.accept === 'string') {
-      this.accept = (el: HTMLElement) => {
-        return el.matches(this.option.accept as string)
-      }
+    if (!this.option.accept) return this;
+    if (typeof this.option.accept === 'string') {
+      this.accept = (el: HTMLElement) => el.matches(this.option.accept as string);
     } else {
-      this.accept = this.option.accept as ((el: HTMLElement) => boolean);
+      this.accept = this.option.accept;
     }
     return this;
   }
