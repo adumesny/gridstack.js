@@ -10,7 +10,6 @@
   "description": "TypeScript/JS lib for dashboard layout and creation, responsive, mobile support, no external dependencies, with many wrappers (React, Angular, Vue, Ember, knockout...)",
   "main": "./dist/gridstack.js",
   "types": "./dist/gridstack.d.ts",
-  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/gridstack/gridstack.js.git"
