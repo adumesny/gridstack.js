@@ -390,7 +390,7 @@ export interface GridStackMoveOpts extends GridStackPosition {
   skip?: GridStackNode;
   /** do we pack (default true) */
   pack?: boolean;
-  /** true if we are calling this recursively to prevent simple swap or coverage collision - default false*/
+  /** true if we are calling this recursively to prevent simple swap or coverage collision - default false */
   nested?: boolean;
   /** vars to calculate other cells coordinates */
   cellWidth?: number;
@@ -537,7 +537,7 @@ export interface GridStackNode extends GridStackWidget {
   visibleObservable?: IntersectionObserver;
   /** @internal internal id used to match when cloning engines or saving column layouts */
   _id?: number;
-  /** @internal does the node attr ned to be updated due to changed x,y,w,h values */
+  /** @internal does the node attr need to be updated due to changed x,y,w,h values */
   _dirty?: boolean;
   /** @internal */
   _updating?: boolean;
@@ -555,9 +555,9 @@ export interface GridStackNode extends GridStackWidget {
   _skipDown?: boolean;
   /** @internal original values before a drag/size */
   _orig?: GridStackPosition;
-  /** @internal position in pixels used during collision check  */
+  /** @internal position in pixels used during collision check */
   _rect?: GridStackPosition;
-  /** @internal top/left pixel location before a drag so we can detect direction of move from last position*/
+  /** @internal top/left pixel location before a drag so we can detect direction of move from last position */
   _lastUiPosition?: Position;
   /** @internal set on the item being dragged/resized remember the last positions we've tried (but failed) so we don't try again during drag/resize */
   _lastTried?: GridStackPosition;
@@ -565,7 +565,7 @@ export interface GridStackNode extends GridStackWidget {
   _willFitPos?: GridStackPosition;
   /** @internal last drag Y pixel position used to incrementally update V scroll bar */
   _prevYPix?: number;
-  /** @internal true if we've remove the item from ourself (dragging out) but might revert it back (release on nothing -> goes back) */
+  /** @internal true if we've removed the item from ourself (dragging out) but might revert it back (release on nothing -> goes back) */
   _temporaryRemoved?: boolean;
   /** @internal true if we should remove DOM element on _notify() rather than clearing _id (old way) */
   _removeDOM?: boolean;
@@ -574,3 +574,4 @@ export interface GridStackNode extends GridStackWidget {
   /** @internal had drag&drop been initialized */
   _initDD?: boolean;
 }
+
